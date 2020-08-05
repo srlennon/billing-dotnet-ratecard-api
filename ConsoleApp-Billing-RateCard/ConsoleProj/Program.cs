@@ -14,12 +14,14 @@ using System.Configuration; //BL
 
 namespace ARMAPI_Test
 {
-#error Please update the appSettings section in app.config, then remove this statement
-
     class Program
     {
         //This is a sample console application that shows you how to grab a User token from AAD for the current user of the app
         //The same caveat remains, that the current user of the app needs to be part of either the Owner, Reader or Contributor role for the requested AzureSubID.
+
+        // Application settings
+        static readonly string CSVFILEPATH = ConfigurationManager.AppSettings["CsvFilePath"];
+
         static void Main(string[] args)
         {
             //Get the AAD User token to get authorized to make the call to the Usage API
@@ -72,6 +74,17 @@ namespace ARMAPI_Test
                 readStream.Close();
                 Console.WriteLine("JSON output complete.  Press ENTER to close.");
                 Console.ReadLine();
+
+                // Write stream to CSV file
+                Console.WriteLine("Data received! Parse data and create csv file...");
+                var ratecard = JsonConvert.DeserializeObject<RateCard>(rateCardResponse);
+
+                string csv = CreateCsv(ratecard.Meters);
+
+                System.IO.File.WriteAllText(CSVFILEPATH, csv, Encoding.UTF8);
+
+                Console.WriteLine("CSV file successfully created. Press key to exit");
+                Console.Read();
             }
             catch(Exception e)
             {
@@ -99,6 +112,22 @@ namespace ARMAPI_Test
             }
 
             return result.AccessToken;
+        }
+
+        public static string CreateCsv(List<Meter> meters)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("MeterId;MeterName;MeterCategory;MeterSubCategory;Unit;MeterTags;MeterRegion;MeterRates;EffectiveDate;IncludedQuantity;MeterStatus");
+
+            meters.ForEach(x =>
+            {
+                string meterRates = string.Join(",", x.MeterRates.Select(y => " [ " + y.Key.ToString() + " : " + y.Value.ToString() + " ]"));
+                string meterTags = string.Join(",", x.MeterTags);
+                sb.AppendLine($"{x.MeterId};{x.MeterName};{x.MeterCategory};{x.MeterSubCategory};{x.Unit};\"{meterTags}\";{x.MeterRegion};\"{meterRates}\";{x.EffectiveDate};{x.IncludedQuantity};{x.MeterStatus}");
+            });
+
+            return sb.ToString();
         }
     }
 }
