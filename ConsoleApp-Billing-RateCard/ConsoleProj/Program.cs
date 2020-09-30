@@ -101,7 +101,7 @@ namespace ARMAPI_Test
                                                                     ConfigurationManager.AppSettings["TenantDomain"]));
 
             //Ask the logged in user to authenticate, so that this client app can get a token on his behalf
-            var result = authenticationContext.AcquireToken(String.Format("{0}/",ConfigurationManager.AppSettings["ARMBillingServiceURL"]),
+            var result = authenticationContext.AcquireToken(string.Format("{0}/", ConfigurationManager.AppSettings["ARMBillingServiceURL"]),
                                                             ConfigurationManager.AppSettings["ClientID"],
                                                             new Uri(ConfigurationManager.AppSettings["ADALRedirectURL"]),
                                                             PromptBehavior.Always);
